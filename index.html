@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookkeeping Total</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color: #172033; background: #f3f6fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px 12px 40px; }
+    .app { max-width: 520px; margin: 0 auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 18px #17203318; }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    .hint { margin: 0 0 18px; color: #657089; }
+    .entry-form { display: flex; gap: 8px; }
+    input { width: 100%; min-width: 0; padding: 13px; border: 1px solid #cbd3e1; border-radius: 9px; font-size: 1rem; }
+    button { border: 0; border-radius: 9px; padding: 12px 15px; font-size: 1rem; cursor: pointer; background: #246bfe; color: white; }
+    button:active { transform: scale(.98); }
+    .danger { background: #e5484d; }
+    .secondary { background: #e9eef7; color: #172033; }
+    #message { min-height: 22px; margin: 10px 0 0; color: #b42318; font-size: .9rem; }
+    ul { list-style: none; padding: 0; margin: 8px 0 18px; }
+    li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #edf0f5; }
+    li span { overflow-wrap: anywhere; }
+    .remove { padding: 6px 10px; font-size: .85rem; background: #eef2f8; color: #172033; }
+    .total-box { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-radius: 11px; background: #e8f0ff; font-size: 1.2rem; font-weight: bold; }
+    .actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+    @media (max-width: 380px) { .entry-form { flex-direction: column; } .entry-form button { width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>Bookkeeping Total</h1>
+    <p class="hint">Add up to 100 handwritten entries.</p>
+
+    <form class="entry-form" id="entryForm">
+      <input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Enter amount" aria-label="Amount">
+      <button type="submit">Add</button>
+    </form>
+    <p id="message" role="status"></p>
+
+    <ul id="entries" aria-live="polite"></ul>
+
+    <div class="total-box">
+      <span>Total</span>
+      <span id="total">0.00</span>
+    </div>
+    <div class="actions">
+      <button class="danger" id="clearAll" type="button">Clear all</button>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('entryForm');
+    const amountInput = document.getElementById('amount');
+    const entriesList = document.getElementById('entries');
+    const totalDisplay = document.getElementById('total');
+    const message = document.getElementById('message');
+    const clearAll = document.getElementById('clearAll');
+    let entries = [];
+
+    function render() {
+      entriesList.innerHTML = '';
+      entries.forEach((value, index) => {
+        const item = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = `${index + 1}. ${value.toFixed(2)}`;
+        const remove = document.createElement('button');
+        remove.className = 'remove';
+        remove.type = 'button';
+        remove.textContent = 'Delete';
+        remove.addEventListener('click', () => {
+          entries.splice(index, 1);
+          render();
+        });
+        item.append(label, remove);
+        entriesList.appendChild(item);
+      });
+      totalDisplay.textContent = entries.reduce((sum, value) => sum + value, 0).toFixed(2);
+      message.textContent = `${entries.length}/100 entries`;
+      message.style.color = '#657089';
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value = Number(amountInput.value);
+      if (!amountInput.value || !Number.isFinite(value) || value < 0) {
+        message.textContent = 'Please enter a valid amount.';
+        message.style.color = '#b42318';
+        return;
+      }
+      if (entries.length >= 100) {
+        message.textContent = 'You have reached the 100-entry limit.';
+        message.style.color = '#b42318';
+        return;
+      }
+      entries.push(value);
+      amountInput.value = '';
+      amountInput.focus();
+      render();
+    });
+
+    clearAll.addEventListener('click', () => {
+      if (entries.length && confirm('Clear all entries?')) entries = [];
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
